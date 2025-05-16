@@ -1,0 +1,19 @@
+
+# Entornos virtuales
+venv/
+.env
+
+# Archivos temporales
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.tmp
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Carpetas específicas del proyecto
+legacy/
