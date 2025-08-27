@@ -84,11 +84,18 @@ def transcribe_audio(audio_file, progress=gr.Progress()):
     cancel_flag.clear()
     
     try:
+        # Crear archivo temporal con la extensión correcta
+        file_extension = os.path.splitext(audio_file)[1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_file:
+            with open(audio_file, 'rb') as src:
+                tmp_file.write(src.read())
+            temp_audio_path = tmp_file.name
+        
         # Calcular duración y costo
-        duration = get_audio_duration(audio_file)
+        duration = get_audio_duration(temp_audio_path)
         cost = calculate_whisper_cost(duration)
         
-        file_size = os.path.getsize(audio_file)
+        file_size = os.path.getsize(temp_audio_path)
         max_size = 25 * 1024 * 1024
         
         # Mostrar información inicial
@@ -98,7 +105,7 @@ def transcribe_audio(audio_file, progress=gr.Progress()):
         temp_dir = None
         
         if file_size > max_size:
-            chunks, temp_dir = split_audio(audio_file, max_size_mb=24)
+            chunks, temp_dir = split_audio(temp_audio_path, max_size_mb=24)
             
             for i, chunk_path in enumerate(chunks):
                 if cancel_flag.is_set():
@@ -116,7 +123,7 @@ def transcribe_audio(audio_file, progress=gr.Progress()):
             if cancel_flag.is_set():
                 return "Transcripción cancelada por el usuario.", None, None, duration, cost
                 
-            with open(audio_file, "rb") as f:
+            with open(temp_audio_path, "rb") as f:
                 result = client.audio.transcriptions.create(
                     model="whisper-1",
                     file=f
@@ -150,6 +157,9 @@ def transcribe_audio(audio_file, progress=gr.Progress()):
     except Exception as e:
         return f"Error: {str(e)}", None, None, None, None
     finally:
+        # Limpiar archivos temporales
+        if 'temp_audio_path' in locals() and os.path.exists(temp_audio_path):
+            os.remove(temp_audio_path)
         if temp_dir and os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
 

@@ -103,7 +103,9 @@ if audio_file is not None:
     if st.session_state.processed_file != current_file_id or st.session_state.transcription is None:
         
         if st.button("🎙️ Iniciar Transcripción"):
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
+            # Obtener la extensión original del archivo
+            file_extension = os.path.splitext(audio_file.name)[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_file:
                 tmp_file.write(audio_file.read())
                 tmp_file_path = tmp_file.name
 
